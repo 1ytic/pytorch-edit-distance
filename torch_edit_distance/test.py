@@ -1,7 +1,7 @@
 import torch
 import unittest
 from numpy.testing import assert_array_almost_equal
-from pytorch_edit_distance_cuda import *
+from torch_edit_distance_cuda import *
 
 
 class EditDistanceTest(unittest.TestCase):
@@ -17,7 +17,7 @@ class EditDistanceTest(unittest.TestCase):
         n = torch.tensor([3, 7], dtype=torch.int).cuda()
         m = torch.tensor([2, 4], dtype=torch.int)
 
-        remove_repetitions(x, n)
+        collapse_repeated(x, n)
 
         assert_array_almost_equal(x.cpu(), y)
         assert_array_almost_equal(n.cpu(), m)

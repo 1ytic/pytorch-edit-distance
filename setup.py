@@ -21,8 +21,8 @@ long_description = get_long_description()
 
 
 setup(
-    name='pytorch_edit_distance',
-    version="0.1.0",
+    name='torch_edit_distance',
+    version="0.2.0",
     description="PyTorch edit-distance functions",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -31,12 +31,12 @@ setup(
     author_email="sorokin.ivan@inbox.ru",
     license="MIT",
     ext_modules=[
-        CUDAExtension('pytorch_edit_distance_cuda', [
+        CUDAExtension('torch_edit_distance_cuda', [
             'binding.cpp',
             'edit-distance.cu',
         ])
     ],
-    packages=['pytorch_edit_distance'],
+    packages=['torch_edit_distance'],
     cmdclass={
         'build_ext': BuildExtension
     },

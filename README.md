@@ -5,11 +5,14 @@ Useful functions for E2E Speech Recognition training with PyTorch and CUDA.
 Here is a simple use case with Reinforcement Learning and RNN-T loss:
 
 ```python
-hs = model.greedy_decode(xs, sampled=True)
+blank = torch.tensor([0], dtype=torch.int).cuda()
+space = torch.tensor([1], dtype=torch.int).cuda()
 
-pytorch_edit_distance.remove_blank(hs, xn, blank)
+xs = model.greedy_decode(xs, sampled=True)
 
-rewards = 1 - pytorch_edit_distance.wer(hs, ys, xn, yn, blank, space)
+torch_edit_distance.remove_blank(xs, xn, blank)
+
+rewards = 1 - torch_edit_distance.compute_wer(xs, ys, xn, yn, blank, space)
 
 nll = rnnt_loss(zs, ys, xn, yn)
 
@@ -20,9 +23,9 @@ loss = nll * rewards
 
 Levenshtein edit-distance with detailed statistics for ins/del/sub operations.
 
-### remove_repetitions
+### collapse_repeated
 
-Remove repeated tokens, useful for CTC-based model.
+Merge repeated tokens, useful for CTC-based model.
 
 ### remove_blank
 
@@ -46,7 +49,7 @@ There is no compiled version of the package. The following setup instructions co
 ### From Pypi
 
 ```bash
-pip install pytorch_edit_distance
+pip install torch_edit_distance
 ```
 
 ### From GitHub

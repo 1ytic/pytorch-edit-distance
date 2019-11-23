@@ -10,14 +10,14 @@
 #define CHECK_CONTIGUOUS(x) TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
 #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
 
-void RemoveRepetitions(
+void CollapseRepeated(
         torch::Tensor source,
         torch::Tensor length) {
 
     CHECK_INPUT(source);
     CHECK_INPUT(length);
 
-    RemoveRepetitionsCuda(source, length);
+    CollapseRepeatedCuda(source, length);
 }
 
 void RemoveBlank(
@@ -63,7 +63,7 @@ torch::Tensor LevenshteinDistance(
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-    m.def("remove_repetitions", &RemoveRepetitions, "Remove repetitions");
+    m.def("collapse_repeated", &CollapseRepeated, "Merge repeated tokens");
     m.def("remove_blank", &RemoveBlank, "Remove blank");
     m.def("strip_separator", &StripSeparator, "Strip separator");
     m.def("levenshtein_distance", &LevenshteinDistance, "Levenshtein distance");

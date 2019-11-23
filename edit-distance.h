@@ -2,7 +2,7 @@
 
 #include <torch/extension.h>
 
-void RemoveRepetitionsCuda(
+void CollapseRepeatedCuda(
         torch::Tensor source,
         torch::Tensor length);
 

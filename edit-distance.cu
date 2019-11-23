@@ -278,7 +278,7 @@ __global__ void levenshtein_distance_kernel(
 }
 
 template <typename scalar_t>
-__global__ void remove_repetitions_kernel(
+__global__ void collapse_repeated_kernel(
         scalar_t* __restrict__ source,
         int* __restrict__ length,
         const size_t size) {
@@ -397,13 +397,13 @@ __global__ void strip_separator_kernel(
     length[i] = n;
 }
 
-void RemoveRepetitionsCuda(
+void CollapseRepeatedCuda(
         torch::Tensor source,
         torch::Tensor length) {
     const auto batch_size = source.size(0);
     auto stream = at::cuda::getCurrentCUDAStream(source.device().index());
-    AT_DISPATCH_ALL_TYPES(source.scalar_type(), "remove_repetitions", ([&] {
-        remove_repetitions_kernel<scalar_t><<<1, batch_size, 0, stream>>>(
+    AT_DISPATCH_ALL_TYPES(source.scalar_type(), "collapse_repeated", ([&] {
+        collapse_repeated_kernel<scalar_t><<<1, batch_size, 0, stream>>>(
             source.data<scalar_t>(),
             length.data<int>(),
             source.size(1));

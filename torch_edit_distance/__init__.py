@@ -1,15 +1,15 @@
 import torch
-import pytorch_edit_distance_cuda as core
+import torch_edit_distance_cuda as core
 from pkg_resources import get_distribution
 
-__version__ = get_distribution('pytorch_edit_distance').version
+__version__ = get_distribution('torch_edit_distance').version
 
 
-def remove_repetitions(
+def collapse_repeated(
         sequences,      # type: torch.Tensor
         lengths         # type: torch.IntTensor
 ):
-    """Remove repetitions.
+    """Merge repeated tokens.
     Sequences and lengths tensors will be modified inplace.
 
     Args:
@@ -18,7 +18,7 @@ def remove_repetitions(
       lengths (torch.IntTensor): Tensor (N,) representing the
         number of tokens for each sequence.
     """
-    core.remove_repetitions(sequences, lengths)
+    core.collapse_repeated(sequences, lengths)
 
 
 def remove_blank(
@@ -93,45 +93,62 @@ def levenshtein_distance(
                                      blank, separator)
 
 
-def wer(hs, rs, hn, rn, blank, space):
-    operations = levenshtein_distance(hs, rs, hn, rn, blank, space).float()
-    error = operations[:, :3].sum(dim=1) / operations[:, 3]
-    return error
+def compute_wer(hs, rs, hn, rn, blank, space):
+    data = levenshtein_distance(hs, rs, hn, rn, blank, space).float()
+    wer = data[:, :3].sum(dim=1) / data[:, 3]
+    return wer
 
 
 class AverageWER(object):
 
-    def __init__(self, blank, space, detail=2, title='wer'):
+    def __init__(self, blank, space, title='WER', detail=2):
         self.blank = blank
         self.space = space
-        self.detail = detail
         self.title = title
-        self.operations = 0
+        self.detail = detail
+        self.data = 0
 
     def update(self, hs, rs, hn, rn):
-        operations = levenshtein_distance(hs, rs, hn, rn, self.blank, self.space)
-        self.operations += operations.sum(dim=0).float()
+        data = levenshtein_distance(hs, rs, hn, rn, self.blank, self.space)
+        self.data += data.sum(dim=0).float()
 
-    def __str__(self):
-        _ins = self.operations[0]
-        _del = self.operations[1]
-        _sub = self.operations[2]
-        _len = self.operations[3]
-        _err = _ins + _del + _sub
-        info = '%s %.1f' % (self.title, _err / _len * 100)
-        if self.detail == 1:
-            info += ' [ %d ins, %d del, %d sub ]' % (_ins, _del, _sub)
-        elif self.detail == 2:
+    def values(self):
+
+        _ins = self.data[0]
+        _del = self.data[1]
+        _sub = self.data[2]
+        _len = self.data[3]
+
+        _err = (_ins + _del + _sub) / _len * 100
+
+        if self.detail == 2:
             _ins = _ins / _len * 100
             _del = _del / _len * 100
             _sub = _sub / _len * 100
+
+        return _err, _ins, _del, _sub
+
+    def summary(self, writer, epoch):
+        _err, _ins, _del, _sub = self.values()
+        if self.detail > 0:
+            writer.add_scalar(self.title + '/insertions', _ins, epoch)
+            writer.add_scalar(self.title + '/deletions', _del, epoch)
+            writer.add_scalar(self.title + '/substitutions', _sub, epoch)
+        writer.add_scalar(self.title, _err, epoch)
+
+    def __str__(self):
+        _err, _ins, _del, _sub = self.values()
+        info = '%s %.1f' % (self.title, _err)
+        if self.detail == 1:
+            info += ' [ %d ins, %d del, %d sub ]' % (_ins, _del, _sub)
+        elif self.detail == 2:
             info += ' [ %.1f ins, %.1f del, %.1f sub ]' % (_ins, _del, _sub)
         return info
 
 
 class AverageCER(AverageWER):
 
-    def __init__(self, blank, space, detail=2, title='cer'):
+    def __init__(self, blank, space, title='CER', detail=2):
         blank = torch.cat([blank, space])
         space = torch.empty([], dtype=space.dtype, device=space.device)
-        super(AverageCER, self).__init__(blank, space, detail, title)
+        super(AverageCER, self).__init__(blank, space, title, detail)
