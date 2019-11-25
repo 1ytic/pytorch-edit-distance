@@ -22,7 +22,7 @@ long_description = get_long_description()
 
 setup(
     name='torch_edit_distance',
-    version="0.2.0",
+    version="0.3.0",
     description="PyTorch edit-distance functions",
     long_description=long_description,
     long_description_content_type="text/markdown",

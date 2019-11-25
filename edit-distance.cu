@@ -19,7 +19,6 @@ __device__ __forceinline__ int is_include(
     return false;
 }
 
-
 template <typename scalar_t>
 __device__ __forceinline__ int tokens_length(
         const scalar_t* __restrict__ first,
@@ -174,14 +173,14 @@ __global__ void levenshtein_distance_kernel(
         const size_t target_size,
         const scalar_t* __restrict__ separator, const size_t separator_size,
         const scalar_t* __restrict__ blank, const size_t blank_size,
-        short* __restrict__ errors_prev,
-        short* __restrict__ errors_curr,
         int* __restrict__ operations) {
 
-    const int i = threadIdx.x;
+    extern __shared__ short errors[];
 
-    errors_prev = errors_prev + i * (target_size + 1) * 4;
-    errors_curr = errors_curr + i * (target_size + 1) * 4;
+    const int i = blockIdx.x;
+
+    auto errors_prev = errors;
+    auto errors_curr = errors + (target_size + 1) * 4;
 
     const scalar_t* hyp_begin = source + i * source_size;
     const scalar_t* ref_begin = target + i * target_size;
@@ -451,7 +450,7 @@ torch::Tensor LevenshteinDistanceCuda(
         torch::Tensor separator) {
 
     const auto batch_size = source.size(0);
-    const auto errors_size = target.size(1) + 1;
+    const auto shared_size = (target.size(1) + 1) * 4 * 2 * sizeof(short);
 
     at::TensorOptions options(source.device());
 
@@ -459,15 +458,10 @@ torch::Tensor LevenshteinDistanceCuda(
 
     auto operations = torch::empty({batch_size, 4}, options);
 
-    options = options.dtype(at::ScalarType::Short);
-
-    torch::Tensor errors_prev = torch::empty({batch_size, errors_size, 4}, options);
-    torch::Tensor errors_curr = torch::empty({batch_size, errors_size, 4}, options);
-
     auto stream = at::cuda::getCurrentCUDAStream(source.device().index());
 
     AT_DISPATCH_ALL_TYPES(source.scalar_type(), "levenshtein_distance", ([&] {
-        levenshtein_distance_kernel<scalar_t><<<1, batch_size, 0, stream>>>(
+        levenshtein_distance_kernel<scalar_t><<<batch_size, 1, shared_size, stream>>>(
             source.data<scalar_t>(),
             target.data<scalar_t>(),
             source_length.data<int>(),
@@ -478,8 +472,6 @@ torch::Tensor LevenshteinDistanceCuda(
             separator.ndimension() * separator.numel(),
             blank.data<scalar_t>(),
             blank.ndimension() * blank.numel(),
-            errors_prev.data<short>(),
-            errors_curr.data<short>(),
             operations.data<int>());
     }));
 
