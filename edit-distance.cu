@@ -1,10 +1,10 @@
 #include "edit-distance.h"
 
-#include <THC/THC.h>
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <c10/cuda/CUDAStream.h>
+
 
 template <typename scalar_t>
 __device__ __forceinline__ int is_include(
@@ -400,7 +400,7 @@ void CollapseRepeatedCuda(
         torch::Tensor source,
         torch::Tensor length) {
     const auto batch_size = source.size(0);
-    auto stream = at::cuda::getCurrentCUDAStream(source.device().index());
+    auto stream = c10::cuda::getCurrentCUDAStream(source.device().index());
     AT_DISPATCH_ALL_TYPES(source.scalar_type(), "collapse_repeated", ([&] {
         collapse_repeated_kernel<scalar_t><<<1, batch_size, 0, stream>>>(
             source.data<scalar_t>(),
@@ -414,7 +414,7 @@ void RemoveBlankCuda(
         torch::Tensor length,
         torch::Tensor blank) {
     const auto batch_size = source.size(0);
-    auto stream = at::cuda::getCurrentCUDAStream(source.device().index());
+    auto stream = c10::cuda::getCurrentCUDAStream(source.device().index());
     AT_DISPATCH_ALL_TYPES(source.scalar_type(), "remove_blank", ([&] {
         remove_blank_kernel<scalar_t><<<1, batch_size, 0, stream>>>(
             source.data<scalar_t>(),
@@ -430,7 +430,7 @@ void StripSeparatorCuda(
         torch::Tensor length,
         torch::Tensor separator) {
     const auto batch_size = source.size(0);
-    auto stream = at::cuda::getCurrentCUDAStream(source.device().index());
+    auto stream = c10::cuda::getCurrentCUDAStream(source.device().index());
     AT_DISPATCH_ALL_TYPES(source.scalar_type(), "strip_separator", ([&] {
         strip_separator_kernel<scalar_t><<<1, batch_size, 0, stream>>>(
             source.data<scalar_t>(),
@@ -458,7 +458,7 @@ torch::Tensor LevenshteinDistanceCuda(
 
     auto operations = torch::empty({batch_size, 4}, options);
 
-    auto stream = at::cuda::getCurrentCUDAStream(source.device().index());
+    auto stream = c10::cuda::getCurrentCUDAStream(source.device().index());
 
     AT_DISPATCH_ALL_TYPES(source.scalar_type(), "levenshtein_distance", ([&] {
         levenshtein_distance_kernel<scalar_t><<<batch_size, 1, shared_size, stream>>>(

@@ -22,13 +22,13 @@ long_description = get_long_description()
 
 setup(
     name='torch_edit_distance',
-    version="0.3.0",
+    version="0.4.0",
     description="PyTorch edit-distance functions",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/1ytic/pytorch-edit-distance",
     author="Ivan Sorokin",
-    author_email="sorokin.ivan@inbox.ru",
+    author_email="i.sorok1n@icloud.com",
     license="MIT",
     ext_modules=[
         CUDAExtension('torch_edit_distance_cuda', [
@@ -52,6 +52,8 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development",

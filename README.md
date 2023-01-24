@@ -37,10 +37,10 @@ Remove leading, trailing and repeated middle separators.
 
 ## Requirements
 
-- C++11 compiler (tested with GCC 5.4).
-- Python: 3.5, 3.6, 3.7 (tested with version 3.6).
-- [PyTorch](http://pytorch.org/) >= 1.0.0 (tested with version 1.1.0).
-- [CUDA Toolkit](https://developer.nvidia.com/cuda-zone) (tested with version 10.0).
+- C++11 compiler (tested with GCC 9.4.0).
+- Python: 3.5, 3.6, 3.7, 3.8, 3.9 (tested with version 3.8).
+- [PyTorch](http://pytorch.org/) >= 1.5.0 (tested with version 1.13.1+cu116).
+- [CUDA Toolkit](https://developer.nvidia.com/cuda-zone) (tested with version 11.2).
 
 ## Install
 
@@ -58,4 +58,10 @@ pip install torch_edit_distance
 git clone https://github.com/1ytic/pytorch-edit-distance
 cd pytorch-edit-distance
 python setup.py install
+```
+
+## Test
+
+```bash
+python -m torch_edit_distance.test
 ```
